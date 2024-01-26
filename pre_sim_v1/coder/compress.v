@@ -1,22 +1,27 @@
 module compress (
+    // directional ports (specified as input, output or inout) which are used to
+    //communicate with the module.
     input clk,
     input rst,
-    input [3:0] d,     
-    input [95:0] in_data,
-    output [7:0] out_data_d1,
-    output [31:0] out_data_d4,
-    output [79:0] out_data_d10
+    input [3:0] d, //[3:0] --> 4 bits    
+    input [95:0] in_data, //96 bits
+    output [7:0] out_data_d1, //8 bits
+    output [31:0] out_data_d4, //32 bits
+    output [79:0] out_data_d10 //80 bits
 );
 
 // input reg
 integer i;
-reg [11:0] in_reg [0:7];
-reg [23:0] mul_out [0:7];
+reg [11:0] in_reg [0:7]; //ada 8 in_reg, masing2 12 bit = 96 bit
+reg [23:0] mul_out [0:7]; //ada 8 mul_out, masing2 24 bit = 192 bit
 
 always @(posedge clk or posedge rst) begin
-    if(rst) for(i=0; i<8; i=i+1) in_reg[i] <= 12'd0;
+    if(rst) for(i=0; i<8; i=i+1) in_reg[i] <= 12'd0; // 12 bit of 0 --> 0000 0000 0000
     else begin
+        //in_data (96 bit) dibagi ke 8 in_reg (12 bit)
+        //in_reg[0] diambilkan dari in_data bit 0-11
         in_reg[0] <= in_data[11:00];
+        //in_reg[1] diambilkan dari in_data bit 12-23
         in_reg[1] <= in_data[23:12];
         in_reg[2] <= in_data[35:24];
         in_reg[3] <= in_data[47:36];
@@ -28,6 +33,8 @@ always @(posedge clk or posedge rst) begin
 end
 
 always @(*) begin
+    //masing2 in_reg dikali 2519
+    //need further explanation
     for(i=0; i<8; i=i+1) mul_out[i] = in_reg[i] * 12'd2519; // 2519 = (2<<22)/3329 = (16<<19)/3329 = (1024<<13)/3329
 end
 
